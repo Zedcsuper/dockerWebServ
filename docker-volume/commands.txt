@@ -40,6 +40,8 @@ docker volume ls | grep logdata
 # Inspect the volume metadata (replace NAME with the exact name)
 docker volume inspect NAME
 
+
+
 # Exec into writer and check the file exists
 docker compose exec writer ls -l /shared
 
@@ -94,3 +96,16 @@ docker volume inspect "$VOL" --format '{{.Mountpoint}}'
 # View the file on host (needs sudo)
 sudo ls -l "$(docker volume inspect "$VOL" --format '{{.Mountpoint}}')"
 sudo tail -f "$(docker volume inspect "$VOL" --format '{{.Mountpoint}}')/log.txt"
+
+#here volume live /var/lib/docker/volumes/docker-volume_logdata/_data
+# Inspect the volume to see the Mountpoint
+docker volume inspect docker-volume_logdata
+
+# View files in the volume (needs sudo)
+sudo ls -l /var/lib/docker/volumes/docker-volume_logdata/_data
+
+# Read the log.txt file directly from host
+sudo cat /var/lib/docker/volumes/docker-volume_logdata/_data/log.txt
+
+# Follow the log file in real-time from host
+sudo tail -f /var/lib/docker/volumes/docker-volume_logdata/_data/log.txt
