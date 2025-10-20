@@ -1,0 +1,96 @@
+# Docker Volume Stack - Testing Commands
+
+## Start / Stop
+# Build and run the reader/writer stack
+cd /home/zed/42cursus/inceptionlearn/docker-volume
+docker compose up --build
+
+# Run without rebuild
+docker compose up
+
+# Run in background (detached)
+docker compose up -d
+
+# Stop and remove containers, keep volumes
+docker compose down
+
+# Stop and remove containers AND volumes (destroys log data)
+docker compose down -v
+
+
+## Logs and Verification
+# Follow logs for both services
+cd /home/zed/42cursus/inceptionlearn/docker-volume
+docker compose logs -f
+
+# Only writer logs
+docker compose logs -f writer
+
+# Only reader logs
+docker compose logs -f reader
+
+# Last 50 lines
+docker compose logs --tail=50
+
+
+## Inspect the Shared Volume and File
+# List Docker volumes and locate the compose-created volume (ends with _logdata)
+docker volume ls | grep logdata
+
+# Inspect the volume metadata (replace NAME with the exact name)
+docker volume inspect NAME
+
+# Exec into writer and check the file exists
+docker compose exec writer ls -l /shared
+
+# Tail the log file from writer container
+docker compose exec writer tail -n 20 /shared/log.txt
+
+# Exec into reader and check it can see the same file
+docker compose exec reader ls -l /shared
+
+
+## One-shot Checks
+# Start stack in background, wait a bit, then show last lines and stop
+cd /home/zed/42cursus/inceptionlearn/docker-volume \
+&& docker compose up -d \
+&& sleep 6 \
+&& docker compose exec writer tail -n 5 /shared/log.txt \
+&& docker compose logs --tail=30 \
+&& docker compose down
+
+
+# From /home/zed/42cursus/inceptionlearn/docker-volume
+docker volume ls | grep logdata           # get the exact volume name
+docker volume inspect <VOLUME_NAME>       # see the Mountpoint on your host
+
+# See the shared files from inside containers
+docker compose exec writer ls -l /shared
+docker compose exec reader ls -l /shared
+docker compose exec writer tail -n 10 /shared/log.txt
+
+## Rebuilds and Cleanup
+# Force rebuild without cache
+docker compose build --no-cache
+
+# Remove unused containers/images/volumes (safe)
+docker container prune -f
+docker image prune -f
+docker volume prune -f
+
+# Deep clean (aggressive: removes everything not in use)
+docker system prune -a --volumes -f
+
+
+# From your project dir
+cd /home/zed/42cursus/inceptionlearn/docker-volume
+
+# Get the volume name that’s mounted at /shared in the writer container
+VOL=$(docker inspect -f '{{range .Mounts}}{{if eq .Destination "/shared"}}{{.Name}}{{end}}{{end}}' $(docker compose ps -q writer))
+
+# Show the host mountpoint
+docker volume inspect "$VOL" --format '{{.Mountpoint}}'
+
+# View the file on host (needs sudo)
+sudo ls -l "$(docker volume inspect "$VOL" --format '{{.Mountpoint}}')"
+sudo tail -f "$(docker volume inspect "$VOL" --format '{{.Mountpoint}}')/log.txt"

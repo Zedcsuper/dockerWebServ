@@ -1,0 +1,17 @@
+services:
+  writer:
+    build: ./writer
+    container_name: log-writer
+    volumes:
+      - logdata:/shared
+
+  reader:
+    build: ./reader
+    container_name: log-reader
+    depends_on:
+      - writer
+    volumes:
+      - logdata:/shared
+
+volumes:
+  logdata:
