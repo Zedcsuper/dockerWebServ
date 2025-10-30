@@ -48,7 +48,10 @@ docker run -d \
   nginx-wp
 
 
-#!/bin/bash
-docker stop $(docker ps -q)
-docker rm $(docker ps -a -q)
-docker rmi $(docker images -q)
+####volume
+docker volume create mariadb_data
+docker volume create wordpress_data
+### ensur nginx see volume
+docker exec -it nginx_test ls /var/www/html
+
+docker volume inspect wordpress_data | grep Mountpoint
