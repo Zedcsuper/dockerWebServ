@@ -1,0 +1,64 @@
+######start clean##########
+docker stop $(docker ps -q)
+docker rm $(docker ps -a -q)
+docker rmi $(docker images -q)
+
+
+#/////////////////////last work/////
+#create network
+docker network create inception_network
+
+#docker build -t mdbtest .
+docker run -d \
+  --name mariadb_test \
+  --network inception_network \
+  -p 3306:3306 \
+  -v $PWD/data:/var/lib/mysql \
+  -e MYSQL_ROOT_PASSWORD=123 \
+  -e MYSQL_DATABASE=wpdb \
+  -e MYSQL_USER=wpuser \
+  -e MYSQL_PASSWORD=123 \
+  mdbtest
+  ################33
+  docker exec -it mariadb_test mariadb -u wpuser -p123 wpdb
+  #################3 word press
+docker build -t wordpress-manual .
+###########################333
+docker run -d \
+  --name wordpress_manual \
+  --network inception_network \
+  -e MYSQL_DATABASE=wpdb \
+  -e MYSQL_USER=wpuser \
+  -e MYSQL_PASSWORD=123 \
+  -e MYSQL_HOST=mariadb_test \
+  -e WORDPRESS_URL=https://localhost \
+  -e WORDPRESS_TITLE="My Test Site" \
+  -e WORDPRESS_ADMIN_USER=admin \
+  -e WORDPRESS_ADMIN_PASSWORD=admin123 \
+  -e WORDPRESS_ADMIN_EMAIL=admin@example.com \
+  -v wordpress_data:/var/www/html \
+  -p 9000:9000 \
+  wordpress-manual
+
+  ##########check network
+docker network ls | grep inception_network || docker network create inception_network
+
+
+#### nginx
+docker build -t nginx-wp .
+
+docker run -d \
+  --name nginx_test \
+  --network inception_network \
+  -p 443:443 \
+  -v wordpress_data:/var/www/html \
+  nginx-wp
+
+
+####volume
+docker volume create mariadb_data
+docker volume create wordpress_data
+### ensur nginx see volume
+docker exec -it nginx_test ls /var/www/html
+
+docker volume inspect wordpress_data | grep Mountpoint
