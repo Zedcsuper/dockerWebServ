@@ -18,7 +18,10 @@ setup:
 	@echo "=== Preparing environment ==="
 	@sudo mkdir -p $(WORDPRESS_DIR) $(MARIADB_DIR)
 	@sudo chmod 777 $(WORDPRESS_DIR) $(MARIADB_DIR)
-	@grep -q "$(DOMAIN)" /etc/hosts || echo "127.0.0.1 $(DOMAIN)" | sudo tee -a /etc/hosts >/dev/null
+	@echo "=== Setting up hosts file ==="
+	@if ! grep -q "$(DOMAIN)" /etc/hosts; then \
+		echo "127.0.0.1 $(DOMAIN)" | sudo tee -a /etc/hosts; \
+	fi
 
 build:
 	@echo "=== Building images ==="
@@ -26,9 +29,6 @@ build:
 
 up:
 	@echo "=== Starting containers ==="
-	mkdir -p /home/zed/data/mariadb
-	mkdir -p /home/zed/data/wordpress
-	sudo chown -R $(USER):$(USER) /home/zed/data
 	@$(DC) up -d
 
 down:

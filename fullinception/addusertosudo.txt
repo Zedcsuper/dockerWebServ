@@ -1,0 +1,5 @@
+sudo -l
+sudo -k
+sudo ls /root
+sudo visudo
+zed ALL=(ALL) NOPASSWD:ALL
