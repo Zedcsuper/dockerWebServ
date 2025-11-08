@@ -26,6 +26,9 @@ build:
 
 up:
 	@echo "=== Starting containers ==="
+	mkdir -p /home/zed/data/mariadb
+	mkdir -p /home/zed/data/wordpress
+	sudo chown -R $(USER):$(USER) /home/zed/data
 	@$(DC) up -d
 
 down:
